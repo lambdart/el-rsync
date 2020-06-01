@@ -2,7 +2,7 @@
 ;;
 ;; Author: esac <esac-io@tutanota.com>
 ;; Maintainer: esac
-;; Version:
+;; Version: 0.1 alpha
 ;; Package-Requires:
 ;; Keywords:
 ;;
@@ -29,6 +29,8 @@
 ;; SOFTWARE.
 ;;
 ;;; Commentary:
+;;
+;;  A little wanna be rsync library interface. (working in progress!).
 ;;
 ;;; Code:
 
@@ -70,14 +72,14 @@ Should be located by `file-executable-p'."
   :type 'bool
   :group 'rsync)
 
-;; hooks?
+;; TODO: research hooks
 ;; (defvar rsync-before-command-hook nil
 ;;   "Hooks to be run after rsync command.")
 
 ;; (defvar rsync-after-command-hook nil
 ;;   "Hooks to be run after rsync command finishes.")
 
-;; filter?
+;; TODO: research filter
 ;; (defun rsync--filter ())
 
 (defun rsync--default-sentinel (process event)
@@ -93,7 +95,8 @@ This is also a template for another callbacks."
       ;; handle exit status
       ((eq status 'exit)
         (when rsync-kill-buffer-p (kill-buffer buffer)))
-      ;; todo: research
+      ;; TODO: research how and if its necessary
+      ;; to verify this process status
       ((or
          (eq status 'stop)
          (eq status 'signal)
@@ -123,51 +126,31 @@ Set a CALLBACK function to handle rsync process signals and returns."
           (secretf (if cred (plist-get (car cred) :secret))))
     (when secretf (funcall secretf))))
 
+(defun rsync-transfer-files (program-args &optional sentinel)
+  "The rsync transfer files operation."
+    (rsync--start-process program-args
+      (or sentinel 'rsync--default-sentinel)))
+
+;; TODO: make a function to reuse arguments formation
+;; (defun rsync-parse-args ())
+
 ;; Push: rsync [OPTION...] SRC... [USER@]HOST::DEST
-;;       rsync [OPTION...] SRC... rsync://[USER@]HOST[:PORT]/DEST
-(defun rsync-push (host src dst &optional user sentinel)
-  "The rsync push action.
+(defun rsync-push (host src dest &optional user sentinel)
+  "The rsync push operation."
+  ;; transfer files from local host to remote host
+  (let* ((host (if user (concat user "@" host) host))
+          (dest (concat host ":" dest))
+          (opts (split-string rsync-opts))
+          (args (append opts (list src dest))))
+    (rsync-transfer-files args sentinel)))
 
-HOST Remote machine identifier.
-The host can be a alises defined in ~/.ssh/config or /etc/hosts,
-auth-sources interface will be provided soon.
-
-SRC  Source directory.
-DST  Destination directory.
-
-&OPTIONAL:
-
-USER Account username.
-SENTINEL function to handle process events."
-
-  ;; parse rsync options and arguments
-  (let*
-    ((host (if user (concat user "@" host) host))
-      (dst  (concat host ":" dst))
-      (opts (split-string rsync-opts))
-      (args (append opts (list src dst)))
-      (sentinel (or sentinel 'rsync--default-sentinel)))
-    ;; call start process and set sentinel callback
-    (rsync--start-process args sentinel)))
-
-;; Pull: rsync [OPTION...] [USER@]HOST::SRC... [DEST]
-;;       rsync [OPTION...] rsync://[USER@]HOST[:PORT]/SRC... [DEST]
-(defun rsync-pull (host user src dst)
-  ""
-  ((host (if user (concat user "@" host) host))
-      (dst  (concat host ":" dst))
-      (opts (split-string rsync-opts))
-      (args (append opts (list src dst)))
-      (sentinel (or sentinel 'rsync--default-sentinel)))
-
-
-  (rsync--start-process args 'rsync--default-sentinel)))
-
-
-;;   )
-;; (append (split-string rsync-opts) '("host"))
-;; (rsync-push "solaris" "/home/esac/core/dev/rsync-el/" "/home/esac/")
-
+(defun rsync-pull (host src dest &optional user sentinel)
+  "The rsync pull operation."
+  (let* ((host (if user (concat user "@" host) host))
+         (src (concat host ":" src))
+         (opts (split-string rsync-opts))
+         (args (append opts (list src dest))))
+    (rsync-transfer-files args sentinel)))
 
 (provide 'rsync)
 ;;; rsync.el ends here
