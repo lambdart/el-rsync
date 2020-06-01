@@ -1,0 +1,16 @@
+#+AUTHOR: esac <esac-io@tutanota.com>
+#+PROPERTY: header-args :tangle no
+
+* Introduction
+
+  Emacs rsync interface.
+
+* LICENSE
+  MIT
+
+* EOF
+  Endlessly gazing in nocturnal prime
+  She spoke of her vices and broke the rhyme
+  But baffled herself with the final line
+  My promise is made but my heart is thine
+  | Face Of Melinda, Opeth |
