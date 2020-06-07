@@ -47,7 +47,7 @@ Should be located by `executable-find'."
   :type 'string
   :group 'rsync)
 
-(defcustom rsync-options "-a -v -h --progress -r"
+(defcustom rsync-switches "-a -v -h --progress -r"
   "The default options for rsync command."
   :type 'string
   :group 'rsync)
@@ -57,18 +57,18 @@ Should be located by `executable-find'."
   :type 'string
   :group 'rsync)
 
-(defcustom rsync-create-buffer-p t
-  "If non-nil create rsync process buffer."
+(defcustom rsync-create-buffer-flag t
+  "Non-nil means create rsync process buffer."
   :type 'bool
   :group 'rsync)
 
-(defcustom rsync-kill-buffer-p nil
-  "If non-nil kill buffer after exit."
+(defcustom rsync-kill-buffer-flag nil
+  "Non-nil means kill buffer after exit."
   :type 'bool
   :group 'rsync)
 
-(defcustom rsync-debug-p t
-  "If non-nil print debug messages on *Message* buffer."
+(defcustom rsync-debug-flag t
+  "Non-nil means print debug messages on *Message* buffer."
   :type 'bool
   :group 'rsync)
 
@@ -91,12 +91,12 @@ This is also a template for another callbacks."
   (let ((status (process-status process))
          (buffer (process-buffer process)))
     ;; debug message
-    (when rsync-debug-p
+    (when rsync-debug-flag
       (message "Process: %s had the event: %s" process event))
     (cond
       ;; handle exit status
       ((eq status 'exit)
-        (when rsync-kill-buffer-p (kill-buffer buffer)))
+        (when rsync-kill-buffer-flag (kill-buffer buffer)))
       ;; TODO condition-case to handle process status (signals, exit, etc...)
       ;; TODO: research how and if its necessary
       ;; to verify this process status
@@ -117,7 +117,7 @@ This is also a template for another callbacks."
 Set a SENTINEL (callback) function to handle rsync
 process signals and returns."
   ;; create a buffer, if create buffer predicate is true
-  (let ((buffer (if rsync-create-buffer-p
+  (let ((buffer (if rsync-create-buffer-flag
                   (get-buffer-create rsync-buffer-name))))
       (rsync--set-sentinel
         (apply 'start-process
@@ -134,7 +134,7 @@ This function return rsync string arguments list."
 
   ;; parse rsync mandatory arguments and options
   (let ((host (if user (concat user "@" host) host))
-         (opts (split-string rsync-options)))
+         (opts (split-string rsync-switches)))
     (if (eq opcode 'pull)
       (setq src (concat host ":" src))
       (setq dest (concat host ":" dest)))
