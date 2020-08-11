@@ -1,9 +1,105 @@
-#+AUTHOR: esac <esac-io@tutanota.com>
+#+AUTHOR: esac
+#+EMAIL: esac-io@tutanota.com
+#+KEYWORDS: readme, rsync, elisp library, emacs package
+#+LANGUAGE: en
 #+PROPERTY: header-args :tangle no
 
 * Introduction
 
-  Emacs rsync interface.
+  Rsync is a fast and extraordinarily versatile file copying tool.
+  It can copy locally, to/from another host over any remote shell, or
+  to/from a remote rsync daemon.
+
+  It offers a large number of options that control every aspect of its
+  behavior and permit very flexible specification of the set of files
+  to be copied.  It is famous for its delta-transfer algorithm,
+  which reduces the amount of data sent over the network by sending
+  only the differences between the source files and the existing files
+  in the destination.  Rsync is widely used for backups and mirroring
+  and as an improved copy command for everyday use.
+
+  This library is just a =Elisp= interface to explore =rsync=
+  capabilities direct from our beloved =Emacs=.
+
+* Dependencies
+** Elisp
+
+  - auth-source
+
+** Non-Elisp
+
+   - rysnc
+
+* Installation
+** Manually
+
+   Clone =Rsync= repository to a arbitrary location:
+
+   #+BEGIN_SRC sh
+
+   $ git clone https://github.com/esac-io/rsync.el ~/.emacs.d/site-elisp/rsync.el
+
+   #+END_SRC
+
+   Add =Rsync= directory to =load-path= inside your
+   =Emacs= initialization file (~init.el~) and load it.
+
+   #+BEGIN_SRC emacs-lisp
+
+   ;; add to load-path
+   (add-to-list 'load-path "/replace/me/to/rsync.el/full/path")
+
+   ;; load rsync feature
+   (require 'rysnc nil t)
+
+   #+END_SRC
+
+   - Note: For a more dynamic approach:
+     - =M-x load-file RET=
+     - =M-x load-library RET rysnc RET=
+
+** Compile
+
+   * Note: Optional but recommended.
+
+   To compile the files the the byte-compiled =Elisp= representation:
+
+   #+BEGIN_SRC sh
+
+   [at-rsync-el-root-directory]$ make
+
+   #+END_SRC
+
+* Usage
+* Customize
+
+   * Note: To see all the options inside =Emacs= and customize it,
+    use: =M-x customize-group RET rsync RET=.
+
+- =rsync-porgram= :: The rsync program name.
+  Should be located by =executable-find= function,
+  (default: 'rsync').
+
+- =rsync-switches= :: The options to be passed to rsync program,
+  (default: '-a -v -h --progress -r').
+
+- =rsync-buffer-name= :: The rysnc process buffer name,
+  (default: =*rsync*=).
+
+- =rsync-create-buffer-flag= :: Non-nil means create rsync process
+  buffer, (default: t) -> =true=.
+
+- =rsync-kill-buffer-flag= :: Non-nil means automatically kill buffer
+  when process exits, (default: t) -> =true=.
+
+- =rsync-debug-flag= :: Non-nil means print debug messages on
+  =*Message*= buffer.
+
+* References
+
+  1. [[https://www.freebsd.org/cgi/man.cgi?query=rsync&apropos=0&sektion=0&manpath=FreeBSD+8.0-RELEASE+and+Ports&format=html][rsync(1)]]
+  2. https://www.gnu.org/software/emacs/manual/auth.html
+  3. https://en.wikipedia.org/wiki/Rsync
 
 * LICENSE
   MIT
