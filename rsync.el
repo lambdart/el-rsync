@@ -75,17 +75,16 @@ Should be located by `executable-find'."
 (defvar rsync-executable (executable-find rsync-program)
   "The rsync executable file (full path).")
 
-;; TODO: research hooks
-;; (defvar rsync-before-command-hook nil
-;;   "Hooks to be run after rsync command.")
+(defvar rsync-host-history-list '()
+  "The rsync host history list.")
 
-;; (defvar rsync-after-command-hook nil
-;;   "Hooks to be run after rsync command finishes.")
+(defvar rsync-dest-history-list '()
+  "The rsync destination directory history list.")
 
 ;; TODO: research filter
 ;; (defun rsync--filter ())
 
-(defun rsync--default-sentinel (process event)
+(defun rsync--sentinel (process event)
   "The rsync PROCESS default EVENT handler function.
 This is also a template for another callbacks."
   (let ((status (process-status process))
@@ -98,8 +97,8 @@ This is also a template for another callbacks."
       ((eq status 'exit)
         (when rsync-kill-buffer-flag (kill-buffer buffer)))
       ;; TODO condition-case to handle process status (signals, exit, etc...)
-      ;; TODO: research how and if its necessary
-      ;; to verify this process status
+      ;; TODO: research if its necessary and how to do:
+      ;; verify the process status
       ((or
          (eq status 'stop)
          (eq status 'signal)
@@ -116,6 +115,7 @@ This is also a template for another callbacks."
 
 Set a SENTINEL (callback) function to handle rsync
 process signals and returns."
+
   ;; create a buffer, if create buffer predicate is true
   (let ((buffer (if rsync-create-buffer-flag
                   (get-buffer-create rsync-buffer-name))))
@@ -124,8 +124,8 @@ process signals and returns."
           rsync-program buffer rsync-executable program-args)
         sentinel)))
 
-(defun rsync--parse-args (opcode host src dest &optional user)
-  "Parse HOST SRC DEST USER arguments based on the rysnc OPCODE.
+(defun rsync--parse-args (operation host src dest &optional user)
+  "Parse HOST SRC DEST USER arguments based on the rysnc OPERATION.
 
 Pull: rsync [OPTION...] [USER@]HOST:SRC... [DEST]
 Push: rsync [OPTION...] SRC... [USER@]HOST:DEST
@@ -133,19 +133,21 @@ Push: rsync [OPTION...] SRC... [USER@]HOST:DEST
 This function return rsync string arguments list."
 
   ;; parse rsync mandatory arguments and options
-  (let ((host (if user (concat user "@" host) host))
-         (opts (split-string rsync-switches)))
-    (if (eq opcode 'pull)
+  (let* ((host (if user (concat user "@" host) host))
+         (options (split-string rsync-switches)))
+    (if (eq operation 'pull)
       (setq src (concat host ":" src))
       (setq dest (concat host ":" dest)))
-    (append opts (list src dest))))
+    (append options (list src dest))))
 
-;; TODO: auth-source integration
-(defun rsync-auth-source-search (host user)
-  "Lookup (format HOST USER PORT) password on auth-source default file."
-  (let* ((cred (auth-source-search :host host :user user))
-          (secretf (if cred (plist-get (car cred) :secret))))
-    (when secretf (funcall secretf))))
+(defun rsync-lookup-password (host user)
+  "Lookup using (HOST USER) password on auth-source default file."
+  (let* ((auth (auth-source-search :host host :user user))
+         (secretf (when auth (plist-get (car auth) :secret))))
+         (cond
+          ((not auth) nil)
+          ((not secretf) nil)
+          (t (funcall secretf)))))
 
 (defun rsync-transfer-files (program-args &optional sentinel)
   "The rsync transfer files operation.
@@ -154,8 +156,9 @@ PROGRAM-ARGS rsync parsed arguments.
 SENTINEL (callback) function to handle process signals/status."
   ;; start transfer procedure (invoke rsync spirit)
   (rsync--start-process program-args
-    (or sentinel 'rsync--default-sentinel)))
+    (or sentinel 'rsync--sentinel)))
 
+;;;###autoload
 (defun rsync-push (host src dest &optional user callback)
   "The rsync push operation.
 
@@ -170,12 +173,13 @@ DEST Destination directory.
 
 USER     User identifier.
 CALLBACK Function to handle process events (sentinel)."
-
-  (if rsync-executable
+  (interactive) ; todo parsing arguments and auth-source integration
+  (unless rsync-executable
+    (error "Program rsync not found"))
     (rsync-transfer-files
-      (rsync--parse-args 'push host src dest user) callback)
-    (error "Command %s not found" rsync-program)))
+      (rsync--parse-args 'push host src dest user) callback))
 
+;;;###autoload
 (defun rsync-pull (host src dest &optional user callback)
   "The rsync pull operation.
 
@@ -190,12 +194,13 @@ DEST Destination directory.
 
 USER     User identifier.
 CALLBACK Function to handle process events (sentinel)."
+  (interactive) ; todo parsing arguments and auth-source integration
   ;; if rsync executable was found:
-  ;; parse arguments and transfer files
-  (if rsync-executable
+;; parse arguments and transfer files
+  (unless rsync-executable
+    (error "Rsync pprogram not found"))
     (rsync-transfer-files
-      (rsync--parse-args 'pull host src dest user) callback)
-    (error "Command %s not found" rsync-program)))
+     (rsync--parse-args 'pull host src dest user) callback))
 
 (provide 'rsync)
 ;;; rsync.el ends here
