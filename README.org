@@ -76,14 +76,14 @@
    * Note: To see all the options inside =Emacs= and customize it,
     use: =M-x customize-group RET rsync RET=.
 
-- =rsync-porgram= :: The rsync program name.
+- =rsync-program= :: Rsync program name.
   Should be located by =executable-find= function,
   (default: 'rsync').
 
-- =rsync-switches= :: The options to be passed to rsync program,
-  (default: '-a -v -h --progress -r').
+- =rsync-switches= :: Rsync default options,
+  (default: '-a -v --progress -r').
 
-- =rsync-buffer-name= :: The rysnc process buffer name,
+- =rsync-buffer-name= :: Rysnc process buffer name,
   (default: =*rsync*=).
 
 - =rsync-create-buffer-flag= :: Non-nil means create rsync process
