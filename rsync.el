@@ -35,6 +35,7 @@
 ;;; Code:
 
 (require 'env)
+(require 'ansi-color)
 (require 'auth-source)
 
 (defgroup rsync nil
@@ -97,8 +98,13 @@ Should be located by `executable-find'."
 (defvar rsync-dest-history-list '()
   "Rsync destination directory history list.")
 
-;; TODO: research filter
-;; (defun rsync--filter ())
+(defun rsync--process-filter (proc string)
+  "Filter rsync PROC ouput STRING."
+  (let ((buffer (process-buffer proc)))
+    (when buffer
+      (with-current-buffer buffer
+        (ansi-color-apply-on-region (point-min) (point-max))
+        (insert string)))))
 
 (defun rsync--sentinel (process event)
   "Rsync sentinel: PROCESS default EVENT handler function.
@@ -111,6 +117,7 @@ This is also a template for another callbacks."
     (cond
      ;; handle exit status
      ((eq status 'exit)
+      (when rsync-debug-flag (message "Process: %s finishes" process))
       (when rsync-kill-buffer-flag (kill-buffer buffer)))
      ;; TODO condition-case to handle process status (signals, exit, etc...)
      ;; TODO: research if its necessary and how to do:
@@ -133,12 +140,17 @@ Set a SENTINEL (callback) function to handle rsync
 process signals and returns."
 
   ;; create a buffer, if create buffer predicate is true
-  (let ((buffer (if rsync-create-buffer-flag
-                    (get-buffer-create rsync-buffer-name))))
-    (rsync--set-sentinel
-     (apply 'start-process
-            rsync-program buffer rsync-executable program-args)
-     sentinel)))
+  (let* ((buffer (if rsync-create-buffer-flag
+                     (get-buffer-create rsync-buffer-name)))
+         (proc (apply 'start-process
+                      rsync-program buffer rsync-executable program-args)))
+    ;; verify if process was correctly created
+    (unless proc
+      (error "Was not possible to create rsync process"))
+    ;; set (default or callback) sentinel
+    (rsync--set-sentinel proc sentinel)
+    ;; set default filter
+    (set-process-filter proc 'rsync--process-filter)))
 
 (defun rsync--read-args (prefix)
   "Read rsync arguments, if PREFIX is non-nil asks for the user."
@@ -234,6 +246,7 @@ CALLBACK Function to handle process events (sentinel)."
   ;; if rsync executable was found:
   ;; parse arguments and transfer files
   (unless rsync-executable
+
     (error "Rsync pprogram not found"))
   (rsync-transfer-files
    (rsync--parse-args 'pull host src dest user) callback))
