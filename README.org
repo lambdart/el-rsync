@@ -30,7 +30,7 @@
 
 ** Non-Elisp
 
-   - rysnc
+   - rsync
 
 * Installation
 ** Manually
@@ -52,13 +52,13 @@
    (add-to-list 'load-path "/replace/me/to/rsync.el/full/path")
 
    ;; load rsync feature
-   (require 'rysnc nil t)
+   (require 'rsync nil t)
 
    #+END_SRC
 
    - Note: For a more dynamic approach:
      - =M-x load-file RET=
-     - =M-x load-library RET rysnc RET=
+     - =M-x load-library RET rsync RET=
 
 ** Compile
 
@@ -85,7 +85,7 @@
 - =rsync-switches= :: Rsync default options,
   (default: '-a -v --progress -r').
 
-- =rsync-buffer-name= :: Rysnc process buffer name,
+- =rsync-buffer-name= :: Rsync process buffer name,
   (default: =*rsync*=).
 
 - =rsync-create-buffer-flag= :: Non-nil means create rsync process
