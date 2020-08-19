@@ -24,7 +24,9 @@
 * Dependencies
 ** Elisp
 
+  - env
   - auth-source
+  - ansi-color
 
 ** Non-Elisp
 
@@ -103,10 +105,12 @@
 
 * LICENSE
   MIT
-
 * EOF
+
+  #+BEGIN_SRC emacs-lisp
   Endlessly gazing in nocturnal prime
   She spoke of her vices and broke the rhyme
   But baffled herself with the final line
   My promise is made but my heart is thine
+  #+END_SRC
   | Face Of Melinda, Opeth |
