@@ -218,10 +218,11 @@ DEST Destination directory.
 
 USER     User identifier.
 CALLBACK Function to handle process events (sentinel)."
+
   (interactive
    (rsync--read-args current-prefix-arg))
   (unless rsync-executable
-    (error "Program rsync not found"))
+    (error "Rsync not found"))
   (rsync-transfer-files
    (rsync--parse-args 'push host src dest user) callback))
 
@@ -240,14 +241,14 @@ DEST Destination directory.
 
 USER     User identifier.
 CALLBACK Function to handle process events (sentinel)."
+
   (interactive
    (rsync--read-args current-prefix-arg))
   ;; todo parsing arguments and auth-source integration
   ;; if rsync executable was found:
   ;; parse arguments and transfer files
   (unless rsync-executable
-
-    (error "Rsync pprogram not found"))
+    (error "Rsync not found"))
   (rsync-transfer-files
    (rsync--parse-args 'pull host src dest user) callback))
 
