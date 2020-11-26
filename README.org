@@ -1,5 +1,5 @@
-#+AUTHOR: esac
-#+EMAIL: esac-io@tutanota.com
+#+AUTHOR: lambdart
+#+EMAIL: lambdart@protonmail.com
 #+KEYWORDS: readme, rsync, elisp library, emacs package
 #+LANGUAGE: en
 #+PROPERTY: header-args :tangle no
@@ -32,6 +32,10 @@
 
    - rsync
 
+* Version
+
+  - 0.0.1 Alpha
+
 * Installation
 ** Manually
 
@@ -39,7 +43,7 @@
 
    #+BEGIN_SRC sh
 
-   $ git clone https://github.com/esac-io/rsync.el ~/.emacs.d/site-elisp/rsync.el
+   $ git clone https://github.com/lambdart/rsync.el ~/.emacs.d/site-elisp/rsync.el
 
    #+END_SRC
 

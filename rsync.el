@@ -1,14 +1,14 @@
 ;;; rsync.el --- summary -*- lexical-binding: t -*-
 ;;
-;; Author: esac <esac-io@tutanota.com>
-;; Maintainer: esac
-;; Version: 0.1 alpha
-;; Package-Requires:
-;; Keywords:
+;; Author: lambdart <lambdart@protonmail.com>
+;; Maintainer: lambdart
+;; Version: Alpha 0.0.1
+;; Homepage: https://github.com/lambdart/rsync.el
+;; Keywords: rsync elisp interface
 ;;
 ;;; MIT License
 ;;
-;; Copyright (c) 2020 esac
+;; Copyright (c) 2020 lambdart
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
 ;; of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,20 @@
 ;;
 ;;; Commentary:
 ;;
-;;  A little wanna be rsync library interface. (working in progress!).
+;; Rsync is a fast and extraordinarily versatile file copying tool.
+;; It can copy locally, to/from another host over any remote shell, or
+;; to/from a remote rsync daemon.
+;;
+;; It offers a large number of options that control every aspect of its
+;; behavior and permit very flexible specification of the set of files
+;; to be copied.  It is famous for its delta-transfer algorithm,
+;; which reduces the amount of data sent over the network by sending
+;; only the differences between the source files and the existing files
+;; in the destination.  Rsync is widely used for backups and mirroring
+;; and as an improved copy command for everyday use.
+;;
+;; This library is just a =Elisp= interface to explore =rsync=
+;; capabilities direct from our beloved =Emacs=.
 ;;
 ;;; Code:
 
@@ -72,6 +85,14 @@ Should be located by `executable-find'."
 (defcustom rsync-debug-flag t
   "Non-nil means print debug messages on *Message* buffer."
   :type 'bool
+  :group 'rsync)
+
+(defcustom rsync-ignore-file-list '()
+  "List of files (and directories) to be ignored in rsync operations.
+Can be set interactive with the function `rsync--ignore-files'.
+This list will be passe to the --exclude= switch, see rsync(1)
+for more information."
+  :type 'list
   :group 'rsync)
 
 (defvar rsync-executable (executable-find rsync-program)
@@ -157,7 +178,7 @@ process signals and returns."
   (let ((host (read-string "Host: "))
         (user (when prefix
                 (read-string "User: " nil nil user-login-name)))
-        (src  (read-directory-name "Source: " nil nil t))
+        (src  (read-directory-name "Source: " nil nil 'confirm))
         (dest (read-directory-name "Destination: ")))
     (list host
           (expand-file-name src)
@@ -200,11 +221,10 @@ This function return rsync string arguments list."
 PROGRAM-ARGS rsync parsed arguments.
 SENTINEL (callback) function to handle process signals/status."
   ;; start transfer procedure (invoke rsync spirit)
-  (rsync--start-process program-args
-                        (or sentinel 'rsync--sentinel)))
+  (rsync--start-process program-args (or sentinel 'rsync--sentinel)))
 
 ;;;###autoload
-(defun rsync-push (host src dest &optional user callback)
+(defun rsync-push (host src dest &optional user sentinel)
   "The rsync push operation.
 
 HOST Remote host identifier.
@@ -217,17 +237,19 @@ DEST Destination directory.
 &OPTIONAL:
 
 USER     User identifier.
-CALLBACK Function to handle process events (sentinel)."
+SENTINEL Function to handle process events (callback)."
 
   (interactive
    (rsync--read-args current-prefix-arg))
-  (unless rsync-executable
-    (error "Rsync not found"))
-  (rsync-transfer-files
-   (rsync--parse-args 'push host src dest user) callback))
+
+  (if (not rsync-executable)
+      (message "Rsync executable not found")
+    ;; parse arguments and transfer files
+    (rsync-transfer-files
+     (rsync--parse-args 'push host src dest user) sentinel)))
 
 ;;;###autoload
-(defun rsync-pull (host src dest &optional user callback)
+(defun rsync-pull (host src dest &optional user sentinel)
   "The rsync pull operation.
 
 HOST Remote host identifier.
@@ -240,17 +262,15 @@ DEST Destination directory.
 &OPTIONAL:
 
 USER     User identifier.
-CALLBACK Function to handle process events (sentinel)."
+SENTINEL Function to handle process events."
 
-  (interactive
-   (rsync--read-args current-prefix-arg))
-  ;; todo parsing arguments and auth-source integration
-  ;; if rsync executable was found:
-  ;; parse arguments and transfer files
-  (unless rsync-executable
-    (error "Rsync not found"))
-  (rsync-transfer-files
-   (rsync--parse-args 'pull host src dest user) callback))
+  (interactive (rsync--read-args current-prefix-arg))
+  ;; verify rsync executable was found
+  (if (not rsync-executable)
+      (message "Rsync executable not found")
+    ;; parse arguments and transfer files
+    (rsync-transfer-files
+     (rsync--parse-args 'pull host src dest user) sentinel)))
 
 (provide 'rsync)
 ;;; rsync.el ends here
